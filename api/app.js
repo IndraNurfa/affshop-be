@@ -24,6 +24,7 @@ const { PORT } = process.env;
 // Configure middleware
 app.use(cors({
     origin: [
+        'https://affshop-be-production.vercel.app',
         'http://localhost:5173',
         'http://localhost:3000',
         'http://localhost:3080',
