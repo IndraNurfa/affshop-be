@@ -59,6 +59,8 @@ io.on('connection', socket => {
 // Add routes
 app.use('/v1', routes);
 
+app.get('/', (req, res) => res.send('Express'));
+
 // Start the server
 server.listen(PORT, () => {
     logger.info(`Server listening on port ${PORT}`);
