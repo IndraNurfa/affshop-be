@@ -1,27 +1,21 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+const http = require('http');
+const cors = require('cors');
 const routes = require('./routes/route');
 const logger = require('./log/logger');
-const cors = require('cors');
 const { connect } = require('./config/dbConfig');
-const http = require('http');
-const { socketIo } = require('socket.io');
+const setupSocketIo = require('./socket'); // Import the separate Socket.IO setup
+
+require('dotenv').config();
 
 const app = express();
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
-
-// Load environment variables from .env file
-require('dotenv').config();
+const server = http.createServer(app);
+const PORT = process.env.PORT;
 
 // Connect to MongoDB
 connect();
 
-app.disable('x-powered-by');
-
-const { PORT } = process.env;
-
-// Configure middleware
+// Configure CORS
 app.use(cors({
     origin: [
         'http://localhost:5173',
@@ -35,34 +29,27 @@ app.use(cors({
     exposedHeaders: ['Authorization']
 }));
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Attach `io` to the `req` object using middleware
+// Add routes
+app.use('/v1', routes);
+
+// Health check endpoint
+app.get('/', (req, res) => res.send('Express Server Running'));
+
+// Initialize Socket.IO
+const io = setupSocketIo(server); // Importing io setup from a separate file
+
+// Attach io to req in middleware
 app.use((req, res, next) => {
     req.io = io;
     next();
 });
-
-
-// Add Socket.IO connection event
-io.on('connection', socket => {
-    logger.info(`New client connected: ${socket.id}`);
-    
-    // Disconnect event
-    socket.on('disconnect', () => {
-        logger.info(`Client disconnected: ${socket.id}`);
-    });
-});
-
-
-// Add routes
-app.use('/v1', routes);
-app.get('/', (req, res) => res.send('Express'));
 
 // Start the server
 server.listen(PORT, () => {
     logger.info(`Server listening on port ${PORT}`);
 });
 
-module.exports = { app, io };
+module.exports = server; // Export only the server for deployment compatibility
