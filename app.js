@@ -1,21 +1,19 @@
 const express = require('express');
-const http = require('http');
 const cors = require('cors');
 const routes = require('./routes/route');
 const logger = require('./log/logger');
 const { connect } = require('./config/dbConfig');
-const setupSocketIo = require('./socket'); // Import the separate Socket.IO setup
-
+const setupSocketIo = require('./socket'); // Importing Socket.IO setup
 require('dotenv').config();
 
 const app = express();
-const server = http.createServer(app);
+const server = require('http').createServer(app);
 const PORT = process.env.PORT;
 
 // Connect to MongoDB
 connect();
 
-// Configure CORS
+// Middleware configuration
 app.use(cors({
     origin: [
         'http://localhost:5173',
@@ -32,24 +30,21 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Add routes
-app.use('/v1', routes);
+// Set up Socket.IO without calling `listen`
+const io = setupSocketIo(server);
 
-// Health check endpoint
-app.get('/', (req, res) => res.send('Express Server Running'));
-
-// Initialize Socket.IO
-const io = setupSocketIo(server); // Importing io setup from a separate file
-
-// Attach io to req in middleware
+// Attach io to req for access in routes
 app.use((req, res, next) => {
     req.io = io;
     next();
 });
 
-// Start the server
+// Add routes
+app.use('/v1', routes);
+app.get('/', (req, res) => res.send('Express Server Running'));
+
 server.listen(PORT, () => {
     logger.info(`Server listening on port ${PORT}`);
 });
 
-module.exports = server; // Export only the server for deployment compatibility
+module.exports = { server };
