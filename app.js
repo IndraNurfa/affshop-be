@@ -48,4 +48,4 @@ server.listen(PORT, () => {
     logger.info(`Server listening on port ${PORT}`);
 });
 
-module.exports = { server };
+module.exports = { server, app };
