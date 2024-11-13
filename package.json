@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js | npx pino-pretty",
+    "start": "nodemon app.js | npx pino-pretty",
     "lint": "eslint . ",
-    "fix": "eslint . --fix"
+    "fix": "eslint . --fix",
+    "build": "echo hello"
   },
   "keywords": [],
   "author": "",
